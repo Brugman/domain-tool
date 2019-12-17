@@ -6,6 +6,8 @@
 
 - Apache (any webserver)
 - PHP
+- Composer
+- npm
 
 ## Installation
 
