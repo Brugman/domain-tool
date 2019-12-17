@@ -1,0 +1,63 @@
+.card--whois { grid-area: whois; }
+.card--ns { grid-area: ns; }
+.card--mx { grid-area: mx; }
+.card--web { grid-area: web; }
+.card--ssl { grid-area: ssl; }
+.card--http { grid-area: http; }
+
+.card {
+    padding: 15px;
+    background-color: $color-card-bg;
+    position: relative;
+    overflow: hidden;
+    z-index: 0;
+    & + .card {
+        @include media( $bp-xs-sm... ) {
+            margin-top: 15px;
+        }
+    }
+    .bg-icon {
+        z-index: -1;
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        top: 15px;
+        right: -20px;
+        svg {
+            color: $color-site-bg;
+        }
+    }
+    h2 {
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        font-weight: normal;
+        font-size: 14px;
+        opacity: 0.3;
+    }
+    p, li {
+        line-height: 2;
+        font-size: 16px;
+    }
+    .translated {
+        display: block;
+        margin-left: 15px;
+        .arrow {
+            svg {
+                position: relative;
+                top: 3px;
+                width: 12px;
+                margin-right: 10px;
+                transform: rotate(90deg);
+                color: $color-site-color;
+            }
+        }
+    }
+    a {
+        text-decoration: none;
+        &:hover {
+            color: $color-accent-1;
+        }
+    }
+}
+
