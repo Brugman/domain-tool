@@ -2,6 +2,7 @@ node_modules/
 vendor/
 .env
 *.sublime-*
-**/*.map
-**/*.css
-**/*.js
+
+public_html/**/*.map
+public_html/**/*.css
+public_html/**/*.js
