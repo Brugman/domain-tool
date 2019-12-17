@@ -1,10 +1,6 @@
 <?php
 
-$domain = false;
-if ( isset( $_GET['domain'] ) && !empty( $_GET['domain'] ) )
-    $domain = $_GET['domain'];
-
-$results = get_results( $domain );
+$results = get_results();
 
 ?>
 
@@ -14,7 +10,7 @@ $results = get_results( $domain );
 
     <form class="form" action="" method="get" role="form">
         <input type="hidden" name="password" value="<?=access_password();?>">
-        <input type="text" name="domain" value="<?=$domain;?>" placeholder="domain.com" autofocus>
+        <input type="text" name="domain" value="<?=$results['domain'] ?? '';?>" placeholder="domain.com" autofocus>
     </form>
 
 <?php if ( $results ): ?>

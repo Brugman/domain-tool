@@ -23,15 +23,19 @@ function access_password()
     return ( getenv('APP_PASSWORD') ? getenv('APP_PASSWORD') : 'password-missing-in-dotenv' );
 }
 
-function get_results( $domain_raw = false )
+function get_results()
 {
-    if ( !$domain_raw )
+    if ( !isset( $_GET['domain'] ) || empty( $_GET['domain'] ) )
         return false;
 
     $results = [];
 
     // domain
-    $results['domain'] = strip_tags( $_GET['domain'] );
+    $parse_url = $_GET['domain'];
+    if ( substr( $parse_url, 0, 4 ) != 'http' )
+        $parse_url = 'https://'.$parse_url;
+
+    $results['domain'] = parse_url( $parse_url, PHP_URL_HOST );
 
     // dns
     $dns_data = dns_get_record( $results['domain'], DNS_NS + DNS_MX + DNS_A );
