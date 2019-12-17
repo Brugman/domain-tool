@@ -1,8 +1,7 @@
-node_modules/
-vendor/
-.env
-*.sublime-*
-
-public_html/**/*.map
-public_html/**/*.css
-public_html/**/*.js
+/node_modules/
+/public_html/**/*.map
+/public_html/**/*.css
+/public_html/**/*.js
+/vendor/
+/.env
+/*.sublime-*
