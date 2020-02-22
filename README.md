@@ -13,7 +13,6 @@
 
 1. `composer i`
 1. `npm i`
-1. `npx gulp --env=prod`
 1. Copy `.env.example` to `.env`.
 1. Map `public_html` to a (sub)domain.
 
