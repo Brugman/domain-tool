@@ -1,4 +1,4 @@
-![Demo](/demo.gif)
+![Screenshot](/screenshot.png)
 
 # Domain Tool
 
