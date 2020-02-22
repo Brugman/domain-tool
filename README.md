@@ -20,6 +20,10 @@ Analyze a domain name in seconds. Save yourself time, or impress a potential cli
 1. Copy `.env.example` to `.env` and configure it.
 1. Map `public_html` to a (sub)domain.
 
+## Disclaimer
+
+This app uses curl on your server to ping the remote websites. If you open this app up for public use, others will be able send those pings on behalf of your website. Too many pings can be considered a Denial of Service attack, and your server may face the consequences. We recommended running this app either locally, or online at a secret URL with a strong password.
+
 ## Contributing
 
 If there's anything you'd like to see added or changed, please open an issue so we can talk about it. Forking is cool too.
