@@ -1,5 +1,8 @@
 <?php
 
+// installaton check
+include 'functions/installaton-check.php';
+
 // composer
 include dirname( getcwd() ).'/vendor/autoload.php';
 
