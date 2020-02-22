@@ -12,7 +12,8 @@ $dotenv->load();
 
 include 'functions/debug.php';
 include 'functions/functions.php';
-include 'functions/restrict.php';
+
+restrict_access();
 
 $title = 'Domain Tool';
 
