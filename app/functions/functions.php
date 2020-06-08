@@ -20,7 +20,7 @@ function dd( $var = false )
 
 function access_password()
 {
-    return ( getenv('APP_PASSWORD') ? getenv('APP_PASSWORD') : 'password-missing-in-dotenv' );
+    return getenv('APP_PASSWORD');
 }
 
 function get_results()
@@ -326,3 +326,16 @@ function display_results_software( $software = false )
     echo '<p>'.$output.'</p>';
 }
 
+function restrict_access()
+{
+    if ( getenv('APP_ENV') == 'local' )
+        return;
+
+    if ( getenv('APP_PASSWORD') == '' )
+        return;
+
+    if ( isset( $_GET['password'] ) && $_GET['password'] == getenv('APP_PASSWORD') )
+        return;
+
+    exit( 'Access restricted.' );
+}

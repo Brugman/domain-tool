@@ -1,5 +1,8 @@
 <?php
 
+// installaton check
+include 'functions/installaton-check.php';
+
 // composer
 include dirname( getcwd() ).'/vendor/autoload.php';
 
@@ -9,7 +12,8 @@ $dotenv->load();
 
 include 'functions/debug.php';
 include 'functions/functions.php';
-include 'functions/restrict.php';
+
+restrict_access();
 
 $title = 'Domain Tool';
 
