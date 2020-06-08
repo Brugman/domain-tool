@@ -40,6 +40,11 @@ function get_results()
     // dns
     $dns_data = dns_get_record( $results['domain'], DNS_NS + DNS_MX + DNS_A );
 
+    // defaults
+    $results['ns'] = false;
+    $results['a'] = false;
+    $results['mx'] = false;
+
     if ( !empty( $dns_data ) )
     {
         foreach ( $dns_data as $data )
@@ -62,10 +67,10 @@ function get_results()
         }
     }
 
-    if ( isset( $results['ns'] ) )
+    if ( is_array( $results['ns'] ) )
         sort( $results['ns'] );
 
-    if ( isset( $results['mx'] ) )
+    if ( is_array( $results['mx'] ) )
         sort( $results['mx'] );
 
     // ssl
