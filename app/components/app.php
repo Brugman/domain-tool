@@ -53,6 +53,18 @@ $results = get_results();
 <?php display_results_http( $results['http_version'] ); ?>
         </div>
 
+        <div class="card card--php">
+            <div class="bg-icon"><?=include_svg();?></div>
+            <h2>PHP</h2>
+<?php display_results_php( $results['php_version'] ); ?>
+        </div>
+
+        <div class="card card--ss">
+            <div class="bg-icon"><?=include_svg();?></div>
+            <h2>Server software</h2>
+<?php display_results_software( $results['server_software'] ); ?>
+        </div>
+
     </div><!-- results -->
 
 <?php endif; // $results ?>

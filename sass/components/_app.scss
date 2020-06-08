@@ -47,13 +47,15 @@ h1 {
         grid-template-areas:
             "whois ns"
             "web mx"
-            "ssl http";
+            "ssl http"
+            "php ss";
     }
     @include media( $bp-lg-up... ) {
         grid-template-columns: 1fr 1fr 1fr;
         grid-template-areas:
             "whois ssl http"
-            "ns web mx";
+            "ns web mx"
+            "php ss .";
     }
 }
 

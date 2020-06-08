@@ -76,8 +76,16 @@ function get_results()
     // ssl
     $results['ssl'] = ssl_status( $results['domain'] );
 
+    $response = get_response( $results['domain'] );
+
     // http version
-    $results['http_version'] = http_version( $results['domain'] );
+    $results['http_version'] = http_version( $response );
+
+    // server software
+    $results['server_software'] = server_software( $response );
+
+    // php version
+    $results['php_version'] = php_version( $response );
 
     return $results;
 }
@@ -146,7 +154,7 @@ function ssl_status( $domain )
     return 2;
 }
 
-function http_version( $domain )
+function get_response( $domain )
 {
     $ch = curl_init();
     curl_setopt( $ch, CURLOPT_URL, $domain );
@@ -158,16 +166,40 @@ function http_version( $domain )
     curl_setopt( $ch, CURLOPT_HTTP_VERSION, CURL_VERSION_HTTP2 );
     curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 5 );
     curl_setopt( $ch, CURLOPT_TIMEOUT, 30 );
-    $response = curl_exec( $ch );
 
-    preg_match_all( '#HTTP/([[:digit:]][^\s]*)#', $response, $matches );
-    $group = end( $matches );
-    $http_version = end( $group );
+    return curl_exec( $ch );
+}
 
-    if ( isset( $http_version ) && !empty( $http_version ) )
-        return $http_version;
+function php_version( $response )
+{
+    preg_match_all( '#\nx-powered-by: PHP\/(.+)#i', $response, $matches );
 
-    return false;
+    $php_version = $matches[1][0] ?? false;
+
+    return $php_version;
+}
+
+function server_software( $response )
+{
+    preg_match_all( '#\nServer: (.+)#i', $response, $matches );
+
+    $server_software = $matches[1][0] ?? false;
+
+    return $server_software;
+}
+
+function http_version( $response )
+{
+    preg_match_all( '#\nHTTP/([[:digit:]][^\s]*)#i', $response, $matches );
+
+    $http_version = false;
+    if ( isset( $matches[0][0] ) )
+    {
+        $temp = end( $matches );
+        $http_version = end( $temp );
+    }
+
+    return $http_version;
 }
 
 function include_svg( $filename = false )
@@ -270,6 +302,26 @@ function display_results_http( $http = false )
 
     if ( $http && !empty( $http ) )
         $output = $http;
+
+    echo '<p>'.$output.'</p>';
+}
+
+function display_results_php( $php = false )
+{
+    $output = 'Could not be determined.';
+
+    if ( $php && !empty( $php ) )
+        $output = $php;
+
+    echo '<p>'.$output.'</p>';
+}
+
+function display_results_software( $software = false )
+{
+    $output = 'Could not be determined.';
+
+    if ( $software && !empty( $software ) )
+        $output = $software;
 
     echo '<p>'.$output.'</p>';
 }
