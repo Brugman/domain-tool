@@ -185,6 +185,16 @@ function server_software( $response )
 
     $server_software = $matches[1][0] ?? false;
 
+    if ( !$server_software )
+        return false;
+
+    $server_software = str_replace( '/', ' ', $server_software );
+
+    $server_software = strtr( $server_software, [
+        'nginx'    => 'NGINX',
+        'lighttpd' => 'Lighttpd',
+    ]);
+
     return $server_software;
 }
 
