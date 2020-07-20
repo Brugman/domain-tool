@@ -77,6 +77,7 @@ function get_results()
     $results['ssl'] = ssl_status( $results['domain'] );
 
     $response = get_response( $results['domain'] );
+    $response = remove_redirects( $response );
 
     // http version
     $results['http_version'] = http_version( $response );
@@ -167,12 +168,21 @@ function get_response( $domain )
     curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 5 );
     curl_setopt( $ch, CURLOPT_TIMEOUT, 30 );
 
-    return curl_exec( $ch );
+function remove_redirects( $response )
+{
+    $response = trim( $response );
+
+    $servers = explode( PHP_EOL.PHP_EOL, $response );
+
+    if ( count( $servers ) > 1 )
+        return end( $servers );
+
+    return $response;
 }
 
 function php_version( $response )
 {
-    preg_match_all( '#\nx-powered-by: PHP\/(.+)#i', $response, $matches );
+    preg_match_all( '#x-powered-by: PHP\/(.+)#i', $response, $matches );
 
     $php_version = $matches[1][0] ?? false;
 
@@ -181,7 +191,7 @@ function php_version( $response )
 
 function server_software( $response )
 {
-    preg_match_all( '#\nServer: (.+)#i', $response, $matches );
+    preg_match_all( '#Server: (.+)#i', $response, $matches );
 
     $server_software = $matches[1][0] ?? false;
 
@@ -201,7 +211,7 @@ function server_software( $response )
 
 function http_version( $response )
 {
-    preg_match_all( '#\nHTTP/([[:digit:]][^\s]*)#i', $response, $matches );
+    preg_match_all( '#HTTP/([[:digit:]][^\s]*)#i', $response, $matches );
 
     $http_version = false;
     if ( isset( $matches[0][0] ) )
