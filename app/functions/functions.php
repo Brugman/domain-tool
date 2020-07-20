@@ -159,7 +159,6 @@ function get_response( $domain )
 {
     $ch = curl_init();
     curl_setopt( $ch, CURLOPT_URL, $domain );
-    // curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
     curl_setopt( $ch, CURLOPT_CAINFO, dirname( __FILE__ ).'/cacert.pem' );
     curl_setopt( $ch, CURLOPT_HEADER, true );
     curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
@@ -167,6 +166,12 @@ function get_response( $domain )
     curl_setopt( $ch, CURLOPT_HTTP_VERSION, CURL_VERSION_HTTP2 );
     curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 5 );
     curl_setopt( $ch, CURLOPT_TIMEOUT, 30 );
+    curl_setopt( $ch, CURLOPT_NOBODY, true );
+
+    $headers = curl_exec( $ch );
+
+    return $headers;
+}
 
 function remove_redirects( $response )
 {
