@@ -230,7 +230,7 @@ function display_results_whois( $domain = false )
 function display_results_ns( $nameservers = false )
 {
     if ( !$nameservers )
-        echo '<p>Nameserver(s) could not be found.</p>';
+        echo '<p class="unknown">Nameserver(s) could not be found.</p>';
 
     if ( $nameservers && is_array( $nameservers ) )
     {
@@ -244,7 +244,7 @@ function display_results_ns( $nameservers = false )
 function display_results_mx( $records = false )
 {
     if ( !$records )
-        echo '<p>Mailserver(s) could not be found.</p>';
+        echo '<p class="unknown">Mailserver(s) could not be found.</p>';
 
     if ( $records && is_array( $records ) )
     {
@@ -276,7 +276,7 @@ function display_results_mx( $records = false )
 function display_results_a( $ips = false )
 {
     if ( !$ips )
-        echo '<p>Webserver(s) could not be found.</p>';
+        echo '<p class="unknown">Webserver(s) could not be found.</p>';
 
     if ( $ips && is_array( $ips ) )
     {
@@ -297,43 +297,59 @@ function display_results_a( $ips = false )
 function display_results_ssl( $ssl = false )
 {
     $output = 'Could not be determined.';
+    $class = 'unknown';
+
+    if ( $ssl == 0 || $ssl == 1 )
+        $class = '';
 
     if ( $ssl == 0 )
-        $output = 'No.';
+        $output = 'No';
     if ( $ssl == 1 )
-        $output = 'Yes.';
+        $output = 'Yes';
 
-    echo '<p>'.$output.'</p>';
+    echo '<p class="'.$class.'">'.$output.'</p>';
 }
 
 function display_results_http( $http = false )
 {
     $output = 'Could not be determined.';
+    $class = 'unknown';
 
     if ( $http && !empty( $http ) )
+    {
         $output = $http;
+        $class = '';
+    }
 
-    echo '<p>'.$output.'</p>';
+    echo '<p class="'.$class.'">'.$output.'</p>';
 }
 
 function display_results_php( $php = false )
 {
     $output = 'Could not be determined.';
+    $class = 'unknown';
 
     if ( $php && !empty( $php ) )
+    {
         $output = $php;
+        $class = '';
+    }
 
-    echo '<p>'.$output.'</p>';
+    echo '<p class="'.$class.'">'.$output.'</p>';
 }
 
 function display_results_software( $software = false )
 {
     $output = 'Could not be determined.';
+    $class = 'unknown';
 
     if ( $software && !empty( $software ) )
+    {
         $output = $software;
+        $class = '';
+    }
 
-    echo '<p>'.$output.'</p>';
+    echo '<p class="'.$class.'">'.$output.'</p>';
 }
 
 function restrict_access()
