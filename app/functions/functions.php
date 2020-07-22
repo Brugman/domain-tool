@@ -381,3 +381,12 @@ function restrict_access()
 
     exit( 'Access restricted.' );
 }
+
+function app_url()
+{
+    if ( isset( $_GET['password'] ) && !empty( $_GET['password'] ) )
+        return '/?password='.$_GET['password'];
+
+    return '/';
+}
+

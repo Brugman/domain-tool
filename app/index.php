@@ -19,7 +19,9 @@ $title = 'Domain Tool';
 
 include 'components/core-head.php';
 
+include 'components/header.php';
 include 'components/app.php';
+include 'components/footer.php';
 
 include 'components/core-foot.php';
 

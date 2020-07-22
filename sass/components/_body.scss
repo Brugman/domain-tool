@@ -1,0 +1,13 @@
+body {
+    min-height: 100vh;
+    background-color: $color-site-bg;
+    @include font-body;
+    font-size: 20px;
+    color: $color-site-color;
+    @include media( $bp-xs-md... ) {
+        padding: 30px 0;
+    }
+    @include media( $bp-lg-up... ) {
+        padding: 100px 0;
+    }
+}
