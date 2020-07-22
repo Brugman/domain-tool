@@ -13,15 +13,21 @@ $dotenv->load();
 include 'functions/debug.php';
 include 'functions/functions.php';
 
-restrict_access();
-
 $title = 'Domain Tool';
 
 include 'components/core-head.php';
 
-include 'components/header.php';
-include 'components/app.php';
-include 'components/footer.php';
+if ( access_granted() )
+{
+    include 'components/header.php';
+    include 'components/app.php';
+    include 'components/footer.php';
+}
+else
+{
+    include 'components/header.php';
+    include 'components/auth.php';
+}
 
 include 'components/core-foot.php';
 

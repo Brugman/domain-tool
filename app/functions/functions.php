@@ -368,18 +368,18 @@ function display_results_software( $software = false )
     echo '<p class="'.$class.'">'.$output.'</p>';
 }
 
-function restrict_access()
+function access_granted()
 {
     if ( getenv('APP_ENV') == 'local' )
-        return;
+        return true;
 
     if ( getenv('APP_PASSWORD') == '' )
-        return;
+        return true;
 
     if ( isset( $_GET['password'] ) && $_GET['password'] == getenv('APP_PASSWORD') )
-        return;
+        return true;
 
-    exit( 'Access restricted.' );
+    return false;
 }
 
 function app_url()
