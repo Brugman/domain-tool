@@ -1,6 +1,12 @@
 {
   "name": "domain-tool",
   "version": "2.0.0",
+  "description": "Analyze a domain name for it's webhosting status.",
+  "homepage": "https://github.com/Brugman/domain-tool",
+  "license": "MIT",
+  "author": "Tim Brugman (https://timbr.dev/)",
+  "repository": "github:Brugman/domain-tool",
+  "private": "true",
   "scripts": {
     "postinstall": "npx gulp --env=prod"
   },
