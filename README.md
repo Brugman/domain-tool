@@ -1,6 +1,7 @@
 # Domain Tool
 
 > Analyze a domain name in seconds. Save yourself time, or impress a client on the phone.
+>
 > “Looks like your website is hosted with X and your domain is over at Y. Do those names sound familiar?”
 
 ![screenshot](/screenshot.png)
