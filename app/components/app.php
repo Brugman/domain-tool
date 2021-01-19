@@ -1,13 +1,18 @@
+<?php
+
+$results = get_results();
+
+?>
 <div id="app">
 
     <div class="container">
 
         <form class="form" action="" method="get" role="form">
             <input type="hidden" name="password" value="<?=access_password();?>">
-            <input type="text" name="domain" value="<?=$results['domain'] ?? '';?>" placeholder="domain.com" autofocus>
+            <input type="text" name="domain" value="<?=$results['domain'] ?? '';?>" placeholder="domain.com" <?=( $results ? '' : 'autofocus' );?>>
         </form>
 
-<?php if ( $results = get_results() ): ?>
+<?php if ( $results ): ?>
 
         <div class="results">
 
