@@ -88,6 +88,9 @@ function get_results()
     // php version
     $results['php_version'] = php_version( $response );
 
+    // cms
+    $results['cms'] = cms( $results['domain'] );
+
     return $results;
 }
 
@@ -171,6 +174,86 @@ function get_response( $domain )
     $headers = curl_exec( $ch );
 
     return $headers;
+}
+
+function cms_check_license_txt( $domain )
+{
+    $ch = curl_init();
+    curl_setopt( $ch, CURLOPT_URL, 'https://'.$domain.'/license.txt' );
+    // curl_setopt( $ch, CURLOPT_CAINFO, dirname( __FILE__ ).'/cacert.pem' );
+    // curl_setopt( $ch, CURLINFO_CERTINFO, true );
+    // curl_setopt( $ch, CURLOPT_HEADER, true );
+    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+    curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
+    // curl_setopt( $ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13' );
+    // curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 5 );
+    // curl_setopt( $ch, CURLOPT_TIMEOUT, 30 );
+
+    $errors = curl_error( $ch );
+    // d( $errors );
+
+    $headers = curl_getinfo( $ch );
+    // d( $headers );
+
+    if ( $headers['http_code'] == '404' )
+        return false;
+
+    $response = curl_exec( $ch );
+    // d( $response );
+
+    if ( substr( $response, 0, 9 ) == 'WordPress' )
+        return 'WordPress';
+
+    return false;
+}
+
+function cms_check_readme_txt( $domain )
+{
+    $ch = curl_init();
+    curl_setopt( $ch, CURLOPT_URL, 'https://'.$domain.'/README.txt' );
+    // curl_setopt( $ch, CURLOPT_CAINFO, dirname( __FILE__ ).'/cacert.pem' );
+    // curl_setopt( $ch, CURLINFO_CERTINFO, true );
+    // curl_setopt( $ch, CURLOPT_HEADER, true );
+    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+    curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
+    // curl_setopt( $ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13' );
+    // curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 5 );
+    // curl_setopt( $ch, CURLOPT_TIMEOUT, 30 );
+
+    $errors = curl_error( $ch );
+    // d( $errors );
+
+    $headers = curl_getinfo( $ch );
+    // d( $headers );
+
+    if ( $headers['http_code'] == '404' )
+        return false;
+
+    $response = curl_exec( $ch );
+    // d( $response );
+
+    $chunk = substr( $response, 0, 100 );
+
+    if ( strpos( $chunk, 'Drupal' ) !== false )
+        return 'Drupal';
+
+    if ( strpos( $chunk, 'Joomla!' ) !== false )
+        return 'Joomla!';
+
+    return false;
+}
+
+function cms( $domain )
+{
+    $result = cms_check_license_txt( $domain );
+    if ( $result )
+        return $result;
+
+    $result = cms_check_readme_txt( $domain );
+    if ( $result )
+        return $result;
+
+    return false;
 }
 
 function remove_redirects( $response )
@@ -362,6 +445,20 @@ function display_results_software( $software = false )
     if ( $software && !empty( $software ) )
     {
         $output = $software;
+        $class = '';
+    }
+
+    echo '<p class="'.$class.'">'.$output.'</p>';
+}
+
+function display_results_cms( $cms = false )
+{
+    $output = 'Could not be determined.';
+    $class = 'unknown';
+
+    if ( $cms && !empty( $cms ) )
+    {
+        $output = $cms;
         $class = '';
     }
 

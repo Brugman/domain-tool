@@ -59,6 +59,12 @@
                 <?php display_results_software( $results['server_software'] ); ?>
             </div>
 
+            <div class="card card--cms">
+                <div class="bg-icon"><?=include_svg();?></div>
+                <h2>CMS</h2>
+                <?php display_results_cms( $results['cms'] ); ?>
+            </div>
+
         </div><!-- results -->
 
 <?php endif; // $results ?>
