@@ -8,7 +8,7 @@ $results = get_results();
     <div class="container">
 
         <form class="form" action="" method="get" role="form">
-            <input type="hidden" name="password" value="<?=access_password();?>">
+            <input type="hidden" name="password" value="<?=app_password();?>">
             <input type="text" name="domain" value="<?=$results['domain'] ?? '';?>" placeholder="domain.com" <?=( $results ? '' : 'autofocus' );?>>
         </form>
 

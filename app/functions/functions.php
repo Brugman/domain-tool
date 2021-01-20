@@ -7,20 +7,242 @@ function d( $var = false )
     echo "</pre>";
 }
 
-function dump( $var = false )
-{
-    d( $var );
-}
-
 function dd( $var = false )
 {
     d( $var );
     exit;
 }
 
-function access_password()
+function access_granted()
+{
+    if ( getenv('APP_ENV') == 'local' )
+        return true;
+
+    if ( getenv('APP_PASSWORD') == '' )
+        return true;
+
+    if ( isset( $_GET['password'] ) && $_GET['password'] == getenv('APP_PASSWORD') )
+        return true;
+
+    return false;
+}
+
+function app_name()
+{
+    return 'Domain Tool';
+}
+
+function app_password()
 {
     return getenv('APP_PASSWORD');
+}
+
+function app_url()
+{
+    if ( isset( $_GET['password'] ) && !empty( $_GET['password'] ) )
+        return '/?password='.$_GET['password'];
+
+    return '/';
+}
+
+function determine_ssl_status_with_curl( $domain )
+{
+    $https_domain = 'https://'.$domain;
+
+    $ch = curl_init();
+    curl_setopt( $ch, CURLOPT_URL, $https_domain );
+    curl_setopt( $ch, CURLOPT_CAINFO, dirname( __FILE__ ).'/cacert.pem' );
+    curl_setopt( $ch, CURLINFO_CERTINFO, true );
+    curl_setopt( $ch, CURLOPT_HEADER, true );
+    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+    curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
+    curl_setopt( $ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13' );
+    curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 5 );
+    curl_setopt( $ch, CURLOPT_TIMEOUT, 30 );
+    curl_exec( $ch );
+
+    $curl_info = curl_getinfo( $ch );
+
+    if ( $curl_info['http_code'] == '0' )
+        return 0;
+    if ( $curl_info['http_code'] == '200' )
+        return 1;
+
+    return 2;
+}
+
+function get_site_with_curl( $domain )
+{
+    $ch = curl_init();
+    curl_setopt( $ch, CURLOPT_URL, $domain );
+    curl_setopt( $ch, CURLOPT_CAINFO, dirname( __FILE__ ).'/cacert.pem' );
+    curl_setopt( $ch, CURLOPT_HEADER, true );
+    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+    curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
+    curl_setopt( $ch, CURLOPT_HTTP_VERSION, CURL_VERSION_HTTP2 );
+    curl_setopt( $ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13' );
+    curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 5 );
+    curl_setopt( $ch, CURLOPT_TIMEOUT, 30 );
+
+    return [
+        curl_error( $ch ),
+        curl_getinfo( $ch ),
+        curl_exec( $ch ),
+    ];
+}
+
+function extract_clean_headers( $response )
+{
+    $parts = explode( PHP_EOL.PHP_EOL, trim( $response ) );
+
+    foreach ( $parts as $k => $part )
+        if ( substr( $part, 0, 4 ) != 'HTTP' )
+            unset( $parts[ $k ] );
+
+    return end( $parts );
+}
+
+function determine_http_version( $response )
+{
+    preg_match_all( '#HTTP/([[:digit:]][^\s]*)#i', $response, $matches );
+
+    $http_version = false;
+    if ( isset( $matches[0][0] ) )
+    {
+        $temp = end( $matches );
+        $http_version = end( $temp );
+    }
+
+    return $http_version;
+}
+
+function determine_server_software( $response )
+{
+    preg_match_all( '#Server: (.+)#i', $response, $matches );
+
+    $server_software = $matches[1][0] ?? false;
+
+    if ( !$server_software )
+        return false;
+
+    $server_software = str_replace( '/', ' ', $server_software );
+
+    $server_software = strtr( $server_software, [
+        'cloudflare-nginx' => 'Cloudflare NGINX',
+        'cloudflare'       => 'Cloudflare',
+        'nginx'            => 'NGINX',
+        'lighttpd'         => 'Lighttpd',
+    ]);
+
+    return $server_software;
+}
+
+function determine_php_version( $response )
+{
+    preg_match_all( '#x-powered-by: PHP\/(.+)#i', $response, $matches );
+
+    $php_version = $matches[1][0] ?? false;
+
+    return $php_version;
+}
+
+function cms_is_wordpress( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    if ( strpos( $html, 'wp-content' ) !== false )
+        return true;
+
+    if ( strpos( $html, 'wp-includes' ) !== false )
+        return true;
+
+    return false;
+}
+
+function cms_is_shopify( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    return ( strpos( $html, 'cdn.shopify.com/s/files/' ) !== false );
+}
+
+function cms_is_joomla( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    return ( stripos( $html, 'joomla' ) !== false );
+}
+
+function cms_is_squarespace( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    return ( strpos( $html, 'static1.squarespace.com' ) !== false );
+}
+
+function cms_is_drupal( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    return ( stripos( $html, 'drupal' ) !== false );
+}
+
+function cms_is_wix( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    return ( strpos( $html, 'static.parastorage.com' ) !== false );
+}
+
+function cms_is_magento( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    return ( strpos( $html, '/static/version' ) !== false );
+}
+
+function cms_is_opencart( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    return ( strpos( $html, 'catalog/view/theme' ) !== false );
+}
+
+function determine_cms( $domain, $html = false )
+{
+    if ( cms_is_wordpress( $html ) )
+        return 'WordPress';
+
+    if ( cms_is_shopify( $html ) )
+        return 'Shopify';
+
+    if ( cms_is_joomla( $html ) )
+        return 'Joomla!';
+
+    if ( cms_is_squarespace( $html ) )
+        return 'Squarespace';
+
+    if ( cms_is_drupal( $html ) )
+        return 'Drupal';
+
+    if ( cms_is_wix( $html ) )
+        return 'Wix';
+
+    if ( cms_is_magento( $html ) )
+        return 'Magento';
+
+    if ( cms_is_opencart( $html ) )
+        return 'OpenCart';
+
+    return false;
 }
 
 function get_results()
@@ -42,7 +264,7 @@ function get_results()
 
     // defaults
     $results['ns'] = false;
-    $results['a'] = false;
+    $results['a']  = false;
     $results['mx'] = false;
 
     if ( !empty( $dns_data ) )
@@ -74,29 +296,38 @@ function get_results()
         sort( $results['mx'] );
 
     // ssl
-    $results['ssl'] = ssl_status( $results['domain'] );
+    $results['ssl'] = determine_ssl_status_with_curl( $results['domain'] );
 
-    // curl
-    [ $curl_errors, $curl_headers, $curl_response ] = get_response( $results['domain'] );
+    // get site
+    [ $site_errors, $site_headers, $site_response ] = get_site_with_curl( $results['domain'] );
 
-    $header = extract_header( $curl_response );
+    // extract clean headers
+    $site_headers_clean = extract_clean_headers( $site_response );
 
     // http version
-    $results['http_version'] = http_version( $header );
+    $results['http_version'] = determine_http_version( $site_headers_clean );
 
     // server software
-    $results['server_software'] = server_software( $header );
+    $results['server_software'] = determine_server_software( $site_headers_clean );
 
     // php version
-    $results['php_version'] = php_version( $header );
+    $results['php_version'] = determine_php_version( $site_headers_clean );
 
     // cms
-    $results['cms'] = determine_cms( $results['domain'], $curl_response );
+    $results['cms'] = determine_cms( $results['domain'], $site_response );
 
     return $results;
 }
 
-function whois_info( $domain = false )
+function include_svg( $filename = false )
+{
+    if ( !$filename )
+        return;
+
+    return file_get_contents( dirname( dirname( __DIR__ ) ).'/public_html/assets/images/'.$filename.'.svg' );
+}
+
+function determine_whois_info( $domain = false )
 {
     if ( !$domain )
         return false;
@@ -122,228 +353,10 @@ function whois_info( $domain = false )
     return $info;
 }
 
-function whois_link( $domain )
-{
-    $parts = explode( '.', $domain );
-
-    if ( end( $parts ) == 'nl' )
-        return 'https://www.sidn.nl/whois/?q='.$domain;
-
-    return 'https://www.transip.nl/whois/prm/'.$domain;
-}
-
-function ssl_status( $domain )
-{
-    $https_domain = 'https://'.$domain;
-
-    $ch = curl_init();
-    curl_setopt( $ch, CURLOPT_URL, $https_domain );
-    curl_setopt( $ch, CURLOPT_CAINFO, dirname( __FILE__ ).'/cacert.pem' );
-    curl_setopt( $ch, CURLINFO_CERTINFO, true );
-    curl_setopt( $ch, CURLOPT_HEADER, true );
-    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-    curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
-    curl_setopt( $ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13' );
-    curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 5 );
-    curl_setopt( $ch, CURLOPT_TIMEOUT, 30 );
-    curl_exec( $ch );
-
-    $curl_info = curl_getinfo( $ch );
-
-    if ( $curl_info['http_code'] == '0' )
-        return 0;
-    if ( $curl_info['http_code'] == '200' )
-        return 1;
-
-    return 2;
-}
-
-function get_response( $domain )
-{
-    $ch = curl_init();
-    curl_setopt( $ch, CURLOPT_URL, $domain );
-    curl_setopt( $ch, CURLOPT_CAINFO, dirname( __FILE__ ).'/cacert.pem' );
-    curl_setopt( $ch, CURLOPT_HEADER, true );
-    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-    curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
-    curl_setopt( $ch, CURLOPT_HTTP_VERSION, CURL_VERSION_HTTP2 );
-    curl_setopt( $ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13' );
-    curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 5 );
-    curl_setopt( $ch, CURLOPT_TIMEOUT, 30 );
-    // curl_setopt( $ch, CURLOPT_NOBODY, true );
-
-    return [
-        curl_error( $ch ),
-        curl_getinfo( $ch ),
-        curl_exec( $ch ),
-    ];
-}
-
-function cms_is_shopify( $html = false )
-{
-    if ( !$html )
-        return false;
-
-    return ( strpos( $html, 'cdn.shopify.com/s/files/' ) !== false );
-}
-
-function cms_is_opencart( $html = false )
-{
-    if ( !$html )
-        return false;
-
-    return ( strpos( $html, 'catalog/view/theme' ) !== false );
-}
-
-function cms_is_squarespace( $html = false )
-{
-    if ( !$html )
-        return false;
-
-    return ( strpos( $html, 'static1.squarespace.com' ) !== false );
-}
-
-function cms_is_wix( $html = false )
-{
-    if ( !$html )
-        return false;
-
-    return ( strpos( $html, 'static.parastorage.com' ) !== false );
-}
-
-function cms_is_magento( $html = false )
-{
-    if ( !$html )
-        return false;
-
-    return ( strpos( $html, '/static/version' ) !== false );
-}
-
-function cms_is_wordpress( $html = false )
-{
-    if ( !$html )
-        return false;
-
-    if ( strpos( $html, 'wp-content' ) !== false )
-        return true;
-
-    if ( strpos( $html, 'wp-includes' ) !== false )
-        return true;
-
-    return false;
-}
-
-function cms_is_drupal( $html = false )
-{
-    if ( !$html )
-        return false;
-
-    return ( stripos( $html, 'drupal' ) !== false );
-}
-
-function cms_is_joomla( $html = false )
-{
-    if ( !$html )
-        return false;
-
-    return ( stripos( $html, 'joomla' ) !== false );
-}
-
-function determine_cms( $domain, $html = false )
-{
-    if ( cms_is_shopify( $html ) )
-        return 'Shopify';
-
-    if ( cms_is_opencart( $html ) )
-        return 'OpenCart';
-
-    if ( cms_is_squarespace( $html ) )
-        return 'Squarespace';
-
-    if ( cms_is_wix( $html ) )
-        return 'Wix';
-
-    if ( cms_is_magento( $html ) )
-        return 'Magento';
-
-    if ( cms_is_wordpress( $html ) )
-        return 'WordPress';
-
-    if ( cms_is_drupal( $html ) )
-        return 'Drupal';
-
-    if ( cms_is_joomla( $html ) )
-        return 'Joomla!';
-
-    return false;
-}
-
-function extract_header( $response )
-{
-    $parts = explode( PHP_EOL.PHP_EOL, trim( $response ) );
-
-    foreach ( $parts as $k => $part )
-        if ( substr( $part, 0, 4 ) != 'HTTP' )
-            unset( $parts[ $k ] );
-
-    return end( $parts );
-}
-
-function php_version( $response )
-{
-    preg_match_all( '#x-powered-by: PHP\/(.+)#i', $response, $matches );
-
-    $php_version = $matches[1][0] ?? false;
-
-    return $php_version;
-}
-
-function server_software( $response )
-{
-    preg_match_all( '#Server: (.+)#i', $response, $matches );
-
-    $server_software = $matches[1][0] ?? false;
-
-    if ( !$server_software )
-        return false;
-
-    $server_software = str_replace( '/', ' ', $server_software );
-
-    $server_software = strtr( $server_software, [
-        'cloudflare-nginx' => 'Cloudflare NGINX',
-        'cloudflare'       => 'Cloudflare',
-        'nginx'            => 'NGINX',
-        'lighttpd'         => 'Lighttpd',
-    ]);
-
-    return $server_software;
-}
-
-function http_version( $response )
-{
-    preg_match_all( '#HTTP/([[:digit:]][^\s]*)#i', $response, $matches );
-
-    $http_version = false;
-    if ( isset( $matches[0][0] ) )
-    {
-        $temp = end( $matches );
-        $http_version = end( $temp );
-    }
-
-    return $http_version;
-}
-
-function include_svg( $filename = false )
-{
-    if ( !$filename )
-        return;
-
-    return file_get_contents( dirname( dirname( __DIR__ ) ).'/public_html/assets/images/'.$filename.'.svg' );
-}
-
 function display_results_whois( $domain = false )
 {
-    $whois_info = whois_info( $domain );
+    if ( !$whois_info = determine_whois_info( $domain ) )
+        return;
 
     echo '<p><a href="'.$whois_info['link'].'" target="_blank">WHOIS this .'.$whois_info['tld'].' domain at '.$whois_info['provider'].'</a>.</p>';
 }
@@ -485,27 +498,5 @@ function display_results_cms( $cms = false )
     }
 
     echo '<p class="'.$class.'">'.$output.'</p>';
-}
-
-function access_granted()
-{
-    if ( getenv('APP_ENV') == 'local' )
-        return true;
-
-    if ( getenv('APP_PASSWORD') == '' )
-        return true;
-
-    if ( isset( $_GET['password'] ) && $_GET['password'] == getenv('APP_PASSWORD') )
-        return true;
-
-    return false;
-}
-
-function app_url()
-{
-    if ( isset( $_GET['password'] ) && !empty( $_GET['password'] ) )
-        return '/?password='.$_GET['password'];
-
-    return '/';
 }
 

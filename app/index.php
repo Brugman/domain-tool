@@ -13,8 +13,6 @@ $dotenv->load();
 include 'functions/debug.php';
 include 'functions/functions.php';
 
-$title = 'Domain Tool';
-
 include 'components/core-head.php';
 
 if ( access_granted() )

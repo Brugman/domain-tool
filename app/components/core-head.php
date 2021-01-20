@@ -9,7 +9,7 @@
     <meta name="robots" content="noindex, nofollow">
 
     <!-- title -->
-    <title><?=$title;?></title>
+    <title><?=app_name();?></title>
 
     <!-- link css -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Armata|Russo+One&display=swap">
