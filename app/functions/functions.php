@@ -76,20 +76,22 @@ function get_results()
     // ssl
     $results['ssl'] = ssl_status( $results['domain'] );
 
-    $response = get_response( $results['domain'] );
-    $response = remove_redirects( $response );
+    // curl
+    [ $curl_errors, $curl_headers, $curl_response ] = get_response( $results['domain'] );
+
+    $header = extract_header( $curl_response );
 
     // http version
-    $results['http_version'] = http_version( $response );
+    $results['http_version'] = http_version( $header );
 
     // server software
-    $results['server_software'] = server_software( $response );
+    $results['server_software'] = server_software( $header );
 
     // php version
-    $results['php_version'] = php_version( $response );
+    $results['php_version'] = php_version( $header );
 
     // cms
-    $results['cms'] = cms( $results['domain'] );
+    $results['cms'] = determine_cms( $results['domain'], $curl_response );
 
     return $results;
 }
@@ -167,13 +169,16 @@ function get_response( $domain )
     curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
     curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
     curl_setopt( $ch, CURLOPT_HTTP_VERSION, CURL_VERSION_HTTP2 );
+    curl_setopt( $ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13' );
     curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 5 );
     curl_setopt( $ch, CURLOPT_TIMEOUT, 30 );
-    curl_setopt( $ch, CURLOPT_NOBODY, true );
+    // curl_setopt( $ch, CURLOPT_NOBODY, true );
 
-    $headers = curl_exec( $ch );
-
-    return $headers;
+    return [
+        curl_error( $ch ),
+        curl_getinfo( $ch ),
+        curl_exec( $ch ),
+    ];
 }
 
 function cms_check_license_txt( $domain )
@@ -243,7 +248,7 @@ function cms_check_readme_txt( $domain )
     return false;
 }
 
-function cms( $domain )
+function determine_cms( $domain, $html = false )
 {
     $result = cms_check_license_txt( $domain );
     if ( $result )
@@ -256,16 +261,15 @@ function cms( $domain )
     return false;
 }
 
-function remove_redirects( $response )
+function extract_header( $response )
 {
-    $response = trim( $response );
+    $parts = explode( PHP_EOL.PHP_EOL, trim( $response ) );
 
-    $servers = explode( PHP_EOL.PHP_EOL, $response );
+    foreach ( $parts as $k => $part )
+        if ( substr( $part, 0, 4 ) != 'HTTP' )
+            unset( $parts[ $k ] );
 
-    if ( count( $servers ) > 1 )
-        return end( $servers );
-
-    return $response;
+    return end( $parts );
 }
 
 function php_version( $response )
