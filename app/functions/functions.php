@@ -181,82 +181,101 @@ function get_response( $domain )
     ];
 }
 
-function cms_check_license_txt( $domain )
+function cms_is_shopify( $html = false )
 {
-    $ch = curl_init();
-    curl_setopt( $ch, CURLOPT_URL, 'https://'.$domain.'/license.txt' );
-    // curl_setopt( $ch, CURLOPT_CAINFO, dirname( __FILE__ ).'/cacert.pem' );
-    // curl_setopt( $ch, CURLINFO_CERTINFO, true );
-    // curl_setopt( $ch, CURLOPT_HEADER, true );
-    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-    curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
-    // curl_setopt( $ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13' );
-    // curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 5 );
-    // curl_setopt( $ch, CURLOPT_TIMEOUT, 30 );
-
-    $errors = curl_error( $ch );
-    // d( $errors );
-
-    $headers = curl_getinfo( $ch );
-    // d( $headers );
-
-    if ( $headers['http_code'] == '404' )
+    if ( !$html )
         return false;
 
-    $response = curl_exec( $ch );
-    // d( $response );
+    return ( strpos( $html, 'cdn.shopify.com/s/files/' ) !== false );
+}
 
-    if ( substr( $response, 0, 9 ) == 'WordPress' )
-        return 'WordPress';
+function cms_is_opencart( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    return ( strpos( $html, 'catalog/view/theme' ) !== false );
+}
+
+function cms_is_squarespace( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    return ( strpos( $html, 'static1.squarespace.com' ) !== false );
+}
+
+function cms_is_wix( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    return ( strpos( $html, 'static.parastorage.com' ) !== false );
+}
+
+function cms_is_magento( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    return ( strpos( $html, '/static/version' ) !== false );
+}
+
+function cms_is_wordpress( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    if ( strpos( $html, 'wp-content' ) !== false )
+        return true;
+
+    if ( strpos( $html, 'wp-includes' ) !== false )
+        return true;
 
     return false;
 }
 
-function cms_check_readme_txt( $domain )
+function cms_is_drupal( $html = false )
 {
-    $ch = curl_init();
-    curl_setopt( $ch, CURLOPT_URL, 'https://'.$domain.'/README.txt' );
-    // curl_setopt( $ch, CURLOPT_CAINFO, dirname( __FILE__ ).'/cacert.pem' );
-    // curl_setopt( $ch, CURLINFO_CERTINFO, true );
-    // curl_setopt( $ch, CURLOPT_HEADER, true );
-    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-    curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
-    // curl_setopt( $ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13' );
-    // curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 5 );
-    // curl_setopt( $ch, CURLOPT_TIMEOUT, 30 );
-
-    $errors = curl_error( $ch );
-    // d( $errors );
-
-    $headers = curl_getinfo( $ch );
-    // d( $headers );
-
-    if ( $headers['http_code'] == '404' )
+    if ( !$html )
         return false;
 
-    $response = curl_exec( $ch );
-    // d( $response );
+    return ( stripos( $html, 'drupal' ) !== false );
+}
 
-    $chunk = substr( $response, 0, 100 );
+function cms_is_joomla( $html = false )
+{
+    if ( !$html )
+        return false;
 
-    if ( strpos( $chunk, 'Drupal' ) !== false )
-        return 'Drupal';
-
-    if ( strpos( $chunk, 'Joomla!' ) !== false )
-        return 'Joomla!';
-
-    return false;
+    return ( stripos( $html, 'joomla' ) !== false );
 }
 
 function determine_cms( $domain, $html = false )
 {
-    $result = cms_check_license_txt( $domain );
-    if ( $result )
-        return $result;
+    if ( cms_is_shopify( $html ) )
+        return 'Shopify';
 
-    $result = cms_check_readme_txt( $domain );
-    if ( $result )
-        return $result;
+    if ( cms_is_opencart( $html ) )
+        return 'OpenCart';
+
+    if ( cms_is_squarespace( $html ) )
+        return 'Squarespace';
+
+    if ( cms_is_wix( $html ) )
+        return 'Wix';
+
+    if ( cms_is_magento( $html ) )
+        return 'Magento';
+
+    if ( cms_is_wordpress( $html ) )
+        return 'WordPress';
+
+    if ( cms_is_drupal( $html ) )
+        return 'Drupal';
+
+    if ( cms_is_joomla( $html ) )
+        return 'Joomla!';
 
     return false;
 }
