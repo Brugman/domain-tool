@@ -76,17 +76,22 @@ function get_results()
     // ssl
     $results['ssl'] = ssl_status( $results['domain'] );
 
-    $response = get_response( $results['domain'] );
-    $response = remove_redirects( $response );
+    // curl
+    [ $curl_errors, $curl_headers, $curl_response ] = get_response( $results['domain'] );
+
+    $header = extract_header( $curl_response );
 
     // http version
-    $results['http_version'] = http_version( $response );
+    $results['http_version'] = http_version( $header );
 
     // server software
-    $results['server_software'] = server_software( $response );
+    $results['server_software'] = server_software( $header );
 
     // php version
-    $results['php_version'] = php_version( $response );
+    $results['php_version'] = php_version( $header );
+
+    // cms
+    $results['cms'] = determine_cms( $results['domain'], $curl_response );
 
     return $results;
 }
@@ -162,25 +167,126 @@ function get_response( $domain )
     curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
     curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
     curl_setopt( $ch, CURLOPT_HTTP_VERSION, CURL_VERSION_HTTP2 );
+    curl_setopt( $ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13' );
     curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 5 );
     curl_setopt( $ch, CURLOPT_TIMEOUT, 30 );
-    curl_setopt( $ch, CURLOPT_NOBODY, true );
+    // curl_setopt( $ch, CURLOPT_NOBODY, true );
 
-    $headers = curl_exec( $ch );
-
-    return $headers;
+    return [
+        curl_error( $ch ),
+        curl_getinfo( $ch ),
+        curl_exec( $ch ),
+    ];
 }
 
-function remove_redirects( $response )
+function cms_is_shopify( $html = false )
 {
-    $response = trim( $response );
+    if ( !$html )
+        return false;
 
-    $servers = explode( PHP_EOL.PHP_EOL, $response );
+    return ( strpos( $html, 'cdn.shopify.com/s/files/' ) !== false );
+}
 
-    if ( count( $servers ) > 1 )
-        return end( $servers );
+function cms_is_opencart( $html = false )
+{
+    if ( !$html )
+        return false;
 
-    return $response;
+    return ( strpos( $html, 'catalog/view/theme' ) !== false );
+}
+
+function cms_is_squarespace( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    return ( strpos( $html, 'static1.squarespace.com' ) !== false );
+}
+
+function cms_is_wix( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    return ( strpos( $html, 'static.parastorage.com' ) !== false );
+}
+
+function cms_is_magento( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    return ( strpos( $html, '/static/version' ) !== false );
+}
+
+function cms_is_wordpress( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    if ( strpos( $html, 'wp-content' ) !== false )
+        return true;
+
+    if ( strpos( $html, 'wp-includes' ) !== false )
+        return true;
+
+    return false;
+}
+
+function cms_is_drupal( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    return ( stripos( $html, 'drupal' ) !== false );
+}
+
+function cms_is_joomla( $html = false )
+{
+    if ( !$html )
+        return false;
+
+    return ( stripos( $html, 'joomla' ) !== false );
+}
+
+function determine_cms( $domain, $html = false )
+{
+    if ( cms_is_shopify( $html ) )
+        return 'Shopify';
+
+    if ( cms_is_opencart( $html ) )
+        return 'OpenCart';
+
+    if ( cms_is_squarespace( $html ) )
+        return 'Squarespace';
+
+    if ( cms_is_wix( $html ) )
+        return 'Wix';
+
+    if ( cms_is_magento( $html ) )
+        return 'Magento';
+
+    if ( cms_is_wordpress( $html ) )
+        return 'WordPress';
+
+    if ( cms_is_drupal( $html ) )
+        return 'Drupal';
+
+    if ( cms_is_joomla( $html ) )
+        return 'Joomla!';
+
+    return false;
+}
+
+function extract_header( $response )
+{
+    $parts = explode( PHP_EOL.PHP_EOL, trim( $response ) );
+
+    foreach ( $parts as $k => $part )
+        if ( substr( $part, 0, 4 ) != 'HTTP' )
+            unset( $parts[ $k ] );
+
+    return end( $parts );
 }
 
 function php_version( $response )
@@ -361,6 +467,20 @@ function display_results_software( $software = false )
     if ( $software && !empty( $software ) )
     {
         $output = $software;
+        $class = '';
+    }
+
+    echo '<p class="'.$class.'">'.$output.'</p>';
+}
+
+function display_results_cms( $cms = false )
+{
+    $output = 'Could not be determined.';
+    $class = 'unknown';
+
+    if ( $cms && !empty( $cms ) )
+    {
+        $output = $cms;
         $class = '';
     }
 
