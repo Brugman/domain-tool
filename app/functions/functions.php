@@ -99,20 +99,18 @@ function whois_info( $domain = false )
     $parts = explode( '.', $domain );
     $tld   = end( $parts );
 
+    $info = [
+        'tld'      => $tld,
+        'provider' => 'TransIP',
+        'link'     => 'https://www.transip.nl/whois/prm/'.$domain,
+    ];
+
     if ( $tld == 'nl' )
     {
         $info = [
             'tld'      => $tld,
             'provider' => 'SIDN',
             'link'     => 'https://www.sidn.nl/whois/?q='.$domain,
-        ];
-    }
-    else
-    {
-        $info = [
-            'tld'      => $tld,
-            'provider' => 'TransIP',
-            'link'     => 'https://www.transip.nl/whois/prm/'.$domain,
         ];
     }
 
@@ -207,6 +205,7 @@ function server_software( $response )
 
     $server_software = strtr( $server_software, [
         'cloudflare-nginx' => 'Cloudflare NGINX',
+        'cloudflare'       => 'Cloudflare',
         'nginx'            => 'NGINX',
         'lighttpd'         => 'Lighttpd',
     ]);
