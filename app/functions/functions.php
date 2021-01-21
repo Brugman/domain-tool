@@ -327,7 +327,49 @@ function include_svg( $filename = false )
     return file_get_contents( dirname( dirname( __DIR__ ) ).'/public_html/assets/images/'.$filename.'.svg' );
 }
 
+function whois_api_wxa( $domain = false )
+{
+    if ( !$domain )
+        return false;
+
+    $api_key = getenv('APP_API_KEY_WXA');
+
+    if ( !$api_key )
+        return false;
+
+    $api_url = 'https://www.whoisxmlapi.com/whoisserver/WhoisService?domainName='.$domain.'&apiKey='.$api_key.'&outputFormat=JSON';
+
+    $results_raw = file_get_contents( $api_url );
+    $results_raw = json_decode( $results_raw, true );
+
+    if ( isset( $results_raw['ErrorMessage'] ) )
+        return false;
+
+    $registrar_site = $results_raw['WhoisRecord']['contactEmail'] ?? false;
+    if ( $registrar_site )
+        $registrar_site = explode( '@', $results_raw['WhoisRecord']['contactEmail'] )[1];
+
+    return [
+        'owner_name'     => $results_raw['WhoisRecord']['registrant']['name'] ?? false,
+        'owner_company'  => $results_raw['WhoisRecord']['registrant']['organization'] ?? false,
+        'registrar_name' => $results_raw['WhoisRecord']['registrarName'] ?? false,
+        'registrar_site' => $registrar_site,
+        'created'        => $results_raw['WhoisRecord']['registryData']['createdDate'] ?? false,
+    ];
+}
+
 function determine_whois_info( $domain = false )
+{
+    if ( !$domain )
+        return false;
+
+    if ( $whois_api_wxa = whois_api_wxa( $domain ) )
+        return $whois_api_wxa;
+
+    return false;
+}
+
+function display_whois_link( $domain = false )
 {
     if ( !$domain )
         return false;
@@ -350,15 +392,40 @@ function determine_whois_info( $domain = false )
         ];
     }
 
-    return $info;
+    echo '<p><a href="'.$info['link'].'" target="_blank">WHOIS this .'.$info['tld'].' domain at '.$info['provider'].'</a>.</p>';
 }
 
 function display_results_whois( $domain = false )
 {
-    if ( !$whois_info = determine_whois_info( $domain ) )
-        return;
+    if ( $whois_info = determine_whois_info( $domain ) )
+    {
+        // format
+        $html_owner = $whois_info['owner_name'];
+        if ( $whois_info['owner_company'] )
+            $html_owner .= '<br>'.$whois_info['owner_company'];
 
-    echo '<p><a href="'.$whois_info['link'].'" target="_blank">WHOIS this .'.$whois_info['tld'].' domain at '.$whois_info['provider'].'</a>.</p>';
+        $html_registrar = $whois_info['registrar_name'];
+        if ( $whois_info['registrar_name'] && $whois_info['registrar_site'] )
+            $html_registrar = '<a href="http://'.$whois_info['registrar_site'].'" target="_blank">'.$whois_info['registrar_name'].'</a>';
+
+        $html_created = '';
+        if ( !empty( $whois_info['created'] ) )
+            $html_created = date( 'Y-m-d', strtotime( $whois_info['created'] ) );
+
+        // display
+        echo '<table>';
+        if ( !empty( $html_owner ) )
+            echo '<tr><th>Owner</th><td>'.$html_owner.'</td></tr>';
+        if ( !empty( $html_registrar ) )
+            echo '<tr><th>Registrar</th><td>'.$html_registrar.'</td></tr>';
+        if ( !empty( $html_created ) )
+            echo '<tr><th>Created</th><td>'.$html_created.'</td></tr>';
+        echo '</table>';
+    }
+    else
+    {
+        display_whois_link( $domain );
+    }
 }
 
 function display_results_ns( $nameservers = false )
