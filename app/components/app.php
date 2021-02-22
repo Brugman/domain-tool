@@ -53,7 +53,7 @@ $results = get_results();
             </div>
 
             <div class="card card--php">
-                <div class="bg-icon"><?=include_svg();?></div>
+                <div class="bg-icon"><?=include_svg( 'php' );?></div>
                 <h2>PHP</h2>
                 <?php display_results_php( $results['php_version'] ); ?>
             </div>
