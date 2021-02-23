@@ -59,13 +59,13 @@ $results = get_results();
             </div>
 
             <div class="card card--ss">
-                <div class="bg-icon"><?=include_svg();?></div>
+                <div class="bg-icon"><?=include_svg( 'cog-light' );?></div>
                 <h2>Server software</h2>
                 <?php display_results_software( $results['server_software'] ); ?>
             </div>
 
             <div class="card card--cms">
-                <div class="bg-icon"><?=include_svg();?></div>
+                <div class="bg-icon"><?=include_svg( 'feather-alt-light' );?></div>
                 <h2>CMS</h2>
                 <?php display_results_cms( $results['cms'] ); ?>
             </div>
