@@ -44,13 +44,19 @@
         line-height: 2;
         font-size: 16px;
     }
+    li {
+        word-break: break-all;
+    }
     .unknown {
         opacity: 0.6;
     }
     .translated {
-        display: block;
-        margin-left: 15px;
+        padding-left: 40px;
+        position: relative;
+        word-break: break-all;
         .arrow {
+            position: absolute;
+            left: 15px;
             svg {
                 position: relative;
                 top: 3px;

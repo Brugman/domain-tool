@@ -465,7 +465,7 @@ function display_results_mx( $records = false )
             {
                 $ip = gethostbyname( $record );
                 if ( $ip != $record )
-                    $ip_html = '<span class="translated"><span class="arrow">'.include_svg( 'level-up-alt-solid' ).'</span>'.$ip.'</span>';
+                    $ip_html = '<div class="translated"><span class="arrow">'.include_svg( 'level-up-alt-solid' ).'</span>'.$ip.'</div>';
             }
 
             echo '<li>'.$record.$ip_html.'</li>';
@@ -487,7 +487,7 @@ function display_results_a( $ips = false )
             $hostname_html = '';
             $hostname = gethostbyaddr( $ip );
             if ( $hostname != $ip )
-                $hostname_html = '<span class="translated"><span class="arrow">'.include_svg( 'level-up-alt-solid' ).'</span>'.$hostname.'</span>';
+                $hostname_html = '<div class="translated"><span class="arrow">'.include_svg( 'level-up-alt-solid' ).'</span>'.$hostname.'</div>';
 
             echo '<li>'.$ip.$hostname_html.'</li>';
         }
