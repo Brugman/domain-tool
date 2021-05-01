@@ -7,23 +7,23 @@
         margin: 0;
         padding: 0 15px;
         border: 0;
-        background-color: $color-domain-bar-bg;
+        background-color: @color-domain-bar-bg;
         letter-spacing: 3px;
         text-transform: uppercase;
         font-family: 'Armata', Arial, sans-serif;
         font-size: 16px;
-        color: $color-site-color;
+        color: @color-site-color;
     }
 }
 
 #app {
     .results {
         margin-top: 50px;
-        @include media( $bp-md-up... ) {
+        @media @bp-md-up {
             display: grid;
             grid-gap: 15px;
         }
-        @include media( $bp-md... ) {
+        @media @bp-md {
             grid-template-columns: 1fr 1fr;
             grid-template-areas:
                 "whois ns"
@@ -31,7 +31,7 @@
                 "ssl http"
                 "php ss";
         }
-        @include media( $bp-lg-up... ) {
+        @media @bp-lg-up {
             grid-template-columns: 1fr 1fr 1fr;
             grid-template-areas:
                 "whois ssl http"

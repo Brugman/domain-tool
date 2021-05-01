@@ -9,12 +9,12 @@
 
 .card {
     padding: 15px;
-    background-color: $color-card-bg;
+    background-color: @color-card-bg;
     position: relative;
     overflow: hidden;
     z-index: 0;
     & + .card {
-        @include media( $bp-xs-sm... ) {
+        @media @bp-xs-sm {
             margin-top: 15px;
         }
     }
@@ -29,7 +29,7 @@
         svg {
             max-width: 100%;
             max-height: 100%;
-            color: $color-site-bg;
+            color: @color-site-bg;
         }
     }
     h2 {
@@ -63,14 +63,14 @@
                 width: 12px;
                 margin-right: 10px;
                 transform: rotate(90deg);
-                color: $color-site-color;
+                color: @color-site-color;
             }
         }
     }
     a {
         text-decoration: none;
         &:hover {
-            color: $color-accent-1;
+            color: @color-accent-1;
         }
     }
     table {
