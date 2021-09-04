@@ -48,7 +48,7 @@ $results = get_results();
 
             <div class="card card--http">
                 <div class="bg-icon"><?=include_svg( 'globe-light' );?></div>
-                <h2>HTTP (beta)</h2>
+                <h2>HTTP</h2>
                 <?php display_results_http( $results['http_version'] ); ?>
             </div>
 
