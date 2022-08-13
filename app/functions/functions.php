@@ -15,13 +15,13 @@ function dd( $var = false )
 
 function access_granted()
 {
-    if ( getenv('APP_ENV') == 'local' )
+    if ( $_ENV['APP_ENV'] == 'local' )
         return true;
 
-    if ( getenv('APP_PASSWORD') == '' )
+    if ( $_ENV['APP_PASSWORD'] == '' )
         return true;
 
-    if ( isset( $_GET['password'] ) && $_GET['password'] == getenv('APP_PASSWORD') )
+    if ( isset( $_GET['password'] ) && $_GET['password'] == $_ENV['APP_PASSWORD'] )
         return true;
 
     return false;
@@ -34,7 +34,7 @@ function app_name()
 
 function app_password()
 {
-    return getenv('APP_PASSWORD');
+    return $_ENV['APP_PASSWORD'];
 }
 
 function app_url()
@@ -332,9 +332,9 @@ function whois_api_wxa( $domain = false )
     if ( !$domain )
         return false;
 
-    $api_key = getenv('APP_API_KEY_WXA');
+    $api_key = $_ENV['APP_API_KEY_WXA'];
 
-    if ( !$api_key )
+    if ( empty( $api_key ) )
         return false;
 
     $api_url = 'https://www.whoisxmlapi.com/whoisserver/WhoisService?domainName='.$domain.'&apiKey='.$api_key.'&outputFormat=JSON';
