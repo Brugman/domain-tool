@@ -52,7 +52,7 @@ function determine_ssl_status_with_curl( $domain )
     $ch = curl_init();
     curl_setopt( $ch, CURLOPT_URL, $https_domain );
     curl_setopt( $ch, CURLOPT_CAINFO, dirname( __FILE__ ).'/cacert.pem' );
-    curl_setopt( $ch, CURLINFO_CERTINFO, true );
+    // curl_setopt( $ch, CURLINFO_CERTINFO, true );
     curl_setopt( $ch, CURLOPT_HEADER, true );
     curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
     curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
