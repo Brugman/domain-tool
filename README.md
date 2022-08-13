@@ -26,7 +26,7 @@ Configuration is done in the `.env` file.
 
 `APP_ENV`: Set this to `local` and no password check will be performed.<br>
 `APP_DEBUG`: Do you want to see errors?<br>
-`APP_PASSWORD`: If you set a password then load the app with `?password=YOURPASSWORD`.
+`APP_PASSWORD`: If you set a password then load the app with `?password=YOURPASSWORD`.<br>
 `APP_API_KEY_WXA`: API key for WHOIS service by [WhoisXMLAPI.com](https://whois.whoisxmlapi.com/).
 
 ## Contributing
