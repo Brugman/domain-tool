@@ -11,12 +11,12 @@
 - Apache
 - PHP
 - Composer
-- npm
+- pnpm
 
 ## Installation
 
 1. `composer i`
-1. `npm i`
+1. `pnpm i`
 1. Copy `.env.example` to `.env` and configure it.
 1. Map `public_html` to a (sub)domain.
 
