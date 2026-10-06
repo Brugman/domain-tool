@@ -70,6 +70,11 @@ $results = get_results();
                 <?php display_results_cms( $results['cms'] ); ?>
             </div>
 
+            <div class="card">
+                <h2>Redirects</h2>
+                <?php display_results_redirects( $results['redirects'] ); ?>
+            </div>
+
         </div><!-- results -->
 
 <?php endif; // $results ?>

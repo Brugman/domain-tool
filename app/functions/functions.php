@@ -90,6 +90,107 @@ function get_site_with_curl( $domain )
     ];
 }
 
+function determine_redirects_with_curl( $domain )
+{
+    $domain = strtolower( (string) preg_replace( '#^www\\.#i', '', (string) $domain ) );
+
+    $checks = [
+        'https'     => 'https://'.$domain,
+        'https www' => 'https://www.'.$domain,
+        'http'      => 'http://'.$domain,
+        'http www'  => 'http://www.'.$domain,
+    ];
+
+    $failed_result = [
+        'destination_label' => false,
+        'status'            => 0,
+        'redirect_count'    => 0,
+        'error_code'        => 0,
+        'success'           => false,
+    ];
+
+    $multi_handle = curl_multi_init();
+
+    if ( !$multi_handle )
+        return array_fill_keys( array_keys( $checks ), $failed_result );
+
+    $handles = [];
+    $results = [];
+
+    foreach ( $checks as $label => $url )
+    {
+        $ch = curl_init();
+        if ( !$ch )
+        {
+            $results[ $label ] = $failed_result;
+            continue;
+        }
+
+        curl_setopt( $ch, CURLOPT_URL, $url );
+        curl_setopt( $ch, CURLOPT_CAINFO, dirname( __FILE__ ).'/cacert.pem' );
+
+        curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
+        curl_setopt( $ch, CURLOPT_MAXREDIRS, 10 );
+        curl_setopt( $ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13' );
+        curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 5 );
+        curl_setopt( $ch, CURLOPT_TIMEOUT, 10 );
+        curl_setopt( $ch, CURLOPT_WRITEFUNCTION, function ( $ch, $data ) {
+            return strlen( $data );
+        });
+
+        curl_multi_add_handle( $multi_handle, $ch );
+        $handles[ $label ] = $ch;
+    }
+
+    do
+    {
+        $multi_status = curl_multi_exec( $multi_handle, $active );
+
+        if ( $active && $multi_status === CURLM_OK )
+        {
+            $select_status = curl_multi_select( $multi_handle, 1 );
+            if ( $select_status === -1 )
+                usleep( 10000 );
+        }
+    }
+    while ( $active && $multi_status === CURLM_OK );
+
+    foreach ( $handles as $label => $ch )
+    {
+        $curl_info           = curl_getinfo( $ch );
+        $destination_url     = (string) ( $curl_info['url'] ?? '' );
+        $destination_parts   = parse_url( $destination_url );
+        $destination_scheme  = strtolower( $destination_parts['scheme'] ?? '' );
+        $destination_host    = strtolower( $destination_parts['host'] ?? '' );
+        $destination_has_www = strpos( $destination_host, 'www.' ) === 0;
+
+        if ( $destination_has_www )
+            $destination_host = substr( $destination_host, 4 );
+
+        $destination_label = false;
+        if ( $destination_host === $domain && in_array( $destination_scheme, [ 'http', 'https' ], true ) )
+            $destination_label = $destination_scheme.( $destination_has_www ? ' www' : '' );
+
+        $error_code = curl_errno( $ch );
+        $status = $curl_info['http_code'] ?? 0;
+
+        $results[ $label ] = [
+            'destination_label' => $destination_label,
+            'status'            => $status,
+            'redirect_count'    => $curl_info['redirect_count'] ?? 0,
+            'error_code'        => $error_code,
+            'success'           => $error_code === CURLE_OK && !empty( $status ),
+        ];
+
+        curl_multi_remove_handle( $multi_handle, $ch );
+        curl_close( $ch );
+    }
+
+    curl_multi_close( $multi_handle );
+
+    return $results;
+}
+
 function extract_clean_headers( $response )
 {
     $parts = explode( PHP_EOL.PHP_EOL, trim( $response ) );
@@ -298,6 +399,9 @@ function get_results()
 
     if ( !empty( $results['mx'] ) )
         sort( $results['mx'] );
+
+    // redirects
+    $results['redirects'] = determine_redirects_with_curl( $results['domain'] );
 
     // ssl
     $results['ssl'] = determine_ssl_status_with_curl( $results['domain'] );
@@ -569,5 +673,37 @@ function display_results_cms( $cms = false )
     }
 
     echo '<p class="'.$class.'">'.$output.'</p>';
+}
+
+function display_results_redirects( $redirects = false )
+{
+    if ( !$redirects || !is_array( $redirects ) )
+    {
+        echo '<p class="unknown">Could not be determined.</p>';
+        return;
+    }
+
+    echo '<table>';
+
+    foreach ( $redirects as $label => $redirect )
+    {
+        $label          = htmlspecialchars( $label, ENT_QUOTES, 'UTF-8' );
+        $status         = (int) ( $redirect['status'] ?? 0 );
+        $redirect_count = (int) ( $redirect['redirect_count'] ?? 0 );
+        $error_code     = (int) ( $redirect['error_code'] ?? 0 );
+
+        if ( empty( $redirect['success'] ) )
+            $destination = (string) ( $error_code ?: $status );
+        elseif ( $redirect_count && !empty( $redirect['destination_label'] ) )
+            $destination = htmlspecialchars( $redirect['destination_label'], ENT_QUOTES, 'UTF-8' );
+        elseif ( !$redirect_count && $status >= 200 && $status < 300 )
+            $destination = 'destination';
+        else
+            $destination = (string) $status;
+
+        echo '<tr><th>'.$label.'</th><td><span>'.include_svg( 'arrow-right' ).'</span></td><td>'.$destination.'</td></tr>';
+    }
+
+    echo '</table>';
 }
 
