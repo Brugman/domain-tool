@@ -113,6 +113,11 @@ function determine_http_version( $response )
         $http_version = end( $temp );
     }
 
+    if ( preg_match_all( '#^alt-svc:\s*(.+)$#mi', $response, $alt_svc_matches ) )
+        foreach ( $alt_svc_matches[1] as $alt_svc )
+            if ( preg_match( '#(?:^|[,;])\s*h3(?:-[0-9]+)?\s*=#i', $alt_svc ) )
+                $http_version = '3';
+
     return $http_version;
 }
 
