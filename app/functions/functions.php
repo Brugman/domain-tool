@@ -400,29 +400,18 @@ function get_results()
     if ( !empty( $results['mx'] ) )
         sort( $results['mx'] );
 
-    // redirects
     $results['redirects'] = determine_redirects_with_curl( $results['domain'] );
+    $results['ssl']       = determine_ssl_status_with_curl( $results['domain'] );
+    $results['dnssec']    = determine_dnssec_with_curl( $results['domain'] );
 
-    // ssl
-    $results['ssl'] = determine_ssl_status_with_curl( $results['domain'] );
-
-    // get site
     [ $site_errors, $site_headers, $site_response ] = get_site_with_curl( $results['domain'] );
 
-    // extract clean headers
     $site_headers_clean = extract_clean_headers( $site_response );
 
-    // http version
-    $results['http_version'] = determine_http_version( $site_headers_clean );
-
-    // server software
+    $results['http_version']    = determine_http_version( $site_headers_clean );
     $results['server_software'] = determine_server_software( $site_headers_clean );
-
-    // php version
-    $results['php_version'] = determine_php_version( $site_headers_clean );
-
-    // cms
-    $results['cms'] = determine_cms( $results['domain'], $site_response );
+    $results['php_version']     = determine_php_version( $site_headers_clean );
+    $results['cms']             = determine_cms( $results['domain'], $site_response );
 
     return $results;
 }
@@ -705,5 +694,97 @@ function display_results_redirects( $redirects = false )
     }
 
     echo '</table>';
+}
+
+function determine_dnssec_with_curl( $domain = false )
+{
+    if ( !$domain )
+        return false;
+
+    $unknown = [
+        'status' => 'unknown',
+        'ds'     => false,
+    ];
+
+    // DS record at the parent zone: the delegation to a signed zone.
+    $ds = dnssec_api_cf( $domain, 'DS' );
+
+    if ( $ds === false || !isset( $ds['Status'] ) )
+        return $unknown;
+
+    $has_ds = !empty( $ds['Answer'] );
+
+    if ( !$has_ds )
+        return [
+            'status' => 'not_enabled',
+            'ds'     => false,
+        ];
+
+    // DNSKEY records in the zone itself.
+    $dnskey = dnssec_api_cf( $domain, 'DNSKEY' );
+
+    if ( $dnskey === false || !isset( $dnskey['Status'] ) )
+        return $unknown + [ 'ds' => true ];
+
+    $has_dnskey = !empty( $dnskey['Answer'] );
+
+    // A validating resolver sets the AD flag when the chain validates.
+    $a = dnssec_api_cf( $domain, 'A' );
+
+    if ( $a === false || !isset( $a['Status'] ) )
+        return $unknown + [ 'ds' => true ];
+
+    $validated = !empty( $a['AD'] );
+
+    if ( $has_dnskey && $validated )
+    {
+        return [
+            'status' => 'secure',
+            'ds'     => true,
+        ];
+    }
+
+    return [
+        'status' => 'problem',
+        'ds'     => true,
+    ];
+}
+
+function dnssec_api_cf( $name = false, $type = false )
+{
+    if ( !$name || !$type )
+        return false;
+
+    $ch = curl_init();
+    curl_setopt( $ch, CURLOPT_URL, 'https://cloudflare-dns.com/dns-query?name='.rawurlencode( $name ).'&type='.$type );
+    curl_setopt( $ch, CURLOPT_CAINFO, dirname( __FILE__ ).'/cacert.pem' );
+    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+    curl_setopt( $ch, CURLOPT_HTTPHEADER, [ 'accept: application/dns-json' ] );
+    curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 5 );
+    curl_setopt( $ch, CURLOPT_TIMEOUT, 10 );
+
+    $response = curl_exec( $ch );
+    $status   = curl_getinfo( $ch, CURLINFO_RESPONSE_CODE );
+    curl_close( $ch );
+
+    if ( $status != 200 || !is_string( $response ) )
+        return false;
+
+    return json_decode( $response, true );
+}
+
+function display_results_dnssec( $dnssec = false )
+{
+    $status = is_array( $dnssec ) ? ( $dnssec['status'] ?? 'unknown' ) : 'unknown';
+
+    $output = match ( $status )
+    {
+        'secure'      => 'Yes',
+        'not_enabled' => 'No',
+        'problem'     => 'Validation failed.',
+        default       => 'Could not be determined.',
+    };
+
+    echo '<p>'.$output.'</p>';
 }
 

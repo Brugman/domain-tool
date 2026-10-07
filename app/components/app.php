@@ -75,6 +75,11 @@ $results = get_results();
                 <?php display_results_redirects( $results['redirects'] ); ?>
             </div>
 
+            <div class="card">
+                <h2>DNSSEC</h2>
+                <?php display_results_dnssec( $results['dnssec'] ); ?>
+            </div>
+
         </div><!-- results -->
 
 <?php endif; // $results ?>
